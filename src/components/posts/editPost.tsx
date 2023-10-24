@@ -13,50 +13,54 @@ import {
 import { api } from "~/utils/api";
 import { useState } from "react";
 
-type CreatePostProps = {
+type EditPostProps = {
   isOpen: boolean;
   onClose: () => void;
   onOpen: () => void;
   refetchPosts: () => void;
+  post_id: number | null;
 };
 
-const CreatePost: React.FC<CreatePostProps> = ({
+const EditPost: React.FC<EditPostProps> = ({
   isOpen,
   onClose,
   onOpen,
   refetchPosts,
+  post_id,
 }) => {
-  const [creatingPost, setCreatingPost] = useState(false);
-  const createPost = api.posts.createPost.useMutation();
+  const [editingPost, setCreatingPost] = useState(false);
+  const editPost = api.posts.editPost.useMutation();
   const [postContent, setPostContent] = useState("");
+
+  const { data: post } = api.posts.getPost.useQuery({ id: post_id });
 
   const addNewPost = async () => {
     setCreatingPost(true);
-    await createPost.mutateAsync({
+    await editPost.mutateAsync({
+      id: post_id,
       content: postContent,
-      status: "published",
+      updatedAt: new Date().toISOString(),
     });
     refetchPosts();
     setCreatingPost(false);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} onOverlayClick={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered={true}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Add New Post</ModalHeader>
+        <ModalHeader>Edit Post</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Box
-            // mt={2}
             alignSelf={"flex-start"}
             borderRadius={"4px"}
-            // padding={4}
             display={"flex"}
             flexDirection={"column"}
           >
             <Box justifySelf={"flex-start"}>
               <Textarea
+                defaultValue={post?.content}
                 bg={"#d1d1d1"}
                 borderRadius={"4px"}
                 padding={1}
@@ -76,13 +80,13 @@ const CreatePost: React.FC<CreatePostProps> = ({
             Close
           </Button>
           <Button
-            isLoading={creatingPost}
+            isLoading={editingPost}
             bg={"#3498db"}
             color={"white"}
             borderRadius={"4px"}
             onClick={addNewPost}
           >
-            Create Post
+            Edit Post
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -90,4 +94,4 @@ const CreatePost: React.FC<CreatePostProps> = ({
   );
 };
 
-export default CreatePost;
+export default EditPost;
